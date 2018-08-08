@@ -11,21 +11,6 @@ import sqlite3
 
 
 
-def words():
-    yield "giovanni"
-    yield "giorgi"
-    yield "oracle"
-    yield "compatible"
-    yield "layer"
-    yield "is"
-    yield "here"
-    #with open('/usr/share/dict/words', 'rb') as fp:
-    #    for word in fp:
-    #        yield word.strip()
-
-# RE replace
-# re.sub(pattern, repl, string, count=0, flags=0)
-# 
 """
 ORACLE:
 https://docs.oracle.com/database/121/SQLRF/functions163.htm#SQLRF06302
@@ -48,6 +33,8 @@ match_param is a text literal that lets you change the default matching behavior
 
 'x' ignores whitespace characters. By default, whitespace characters match themselves.
 
+GG: UNIMPLEMENTED
+
 If you specify multiple contradictory values, then Oracle uses the last value. For example, if you specify 'ic', then Oracle uses case-sensitive matching. If you specify a character other than those shown above, then Oracle returns an error.
 
 If you omit match_param, then:
@@ -61,13 +48,7 @@ The source string is treated as a single line.
 """
 def oracle_regexp_replace(source,pattern,replace_string,position=1,occurence=0,match_parameter=None):
     try:
-        pythonFlags=0
-        if match_parameter:
-            if 'i' in match_parameter:
-                pythonFlags=re.IGNORECASE
-        else:
-            pythonFlags=0
-        
+        pythonFlags=translate_oracle_match_parameters(match_parameter)
         if position == 1:
             return re.sub(pattern,replace_string,source,count=occurence,flags=pythonFlags)
         else:
@@ -76,16 +57,100 @@ def oracle_regexp_replace(source,pattern,replace_string,position=1,occurence=0,m
         print("Unexpected error:", sys.exc_info()[0])
         raise
 
-def regexp(y, x, search=re.search):
-    return 1 if search(y, x) else 0
+
+
+def translate_oracle_match_parameters(match_parameter):
+    pythonFlags=0
+    if match_parameter:
+        if 'i' in match_parameter:
+            pythonFlags |=re.IGNORECASE
+            # 'c' is the default
+        if 'n' in match_parameter:
+            pythonFlags |=re.DOTALL
+        if 'm' in match_parameter:
+            pythonFlags |=re.MULTILINE
+        if 'x' in match_parameter:
+            raise Exception("x flag is unimplemented")
+    return pythonFlags
+
+"""
+Ref https://docs.oracle.com/database/121/SQLRF/conditions007.htm#SQLRF00501
+
+REGEXP_LIKE is similar to the LIKE condition, except REGEXP_LIKE performs regular expression matching instead of the simple pattern matching performed by LIKE. This condition evaluates strings using characters as defined by the input character set.
+
+REGEXP_LIKE(source_char, pattern
+            [, match_param ]
+           )
+
+source_char is a character expression that serves as the search value. It is commonly a character column and can be of any of the data types CHAR, VARCHAR2, NCHAR, NVARCHAR2, CLOB, or NCLOB.
+
+pattern is the regular expression. It is usually a text literal and can be of any of the data types CHAR, VARCHAR2, NCHAR, or NVARCHAR2. It can contain up to 512 bytes. If the data type of pattern is different from the data type of source_char, Oracle converts pattern to the data type of source_char. For a listing of the operators you can specify in pattern, refer to Appendix D, "Oracle Regular Expression Support".
+
+match_parameter is a text literal that lets you change the default matching behavior of the function.
+
+"""
+def oracle_regexp_like(source,pattern,match_parameter=None):
+    try:
+        pythonFlags=translate_oracle_match_parameters(match_parameter)
+        return 1 if re.search(pattern,source,flags=pythonFlags) else 0
+    except:
+        print("Unexpected error:", sys.exc_info()[0])
+        raise
+
+"""
+Ref https://docs.oracle.com/database/121/SQLRF/functions131.htm#SQLRF00684
+
+NVL(expr1, expr2)
+
+NVL lets you replace null (returned as a blank) with a string in the results of a query. If expr1 is null, then NVL returns expr2. If expr1 is not null, then NVL returns expr1.
+
+The arguments expr1 and expr2 can have any data type. If their data types are different, then Oracle Database implicitly converts one to the other. If they cannot be converted implicitly, then the database returns an error. The implicit conversion is implemented as follows:
+
+
+"""
+def oracle_nvl(expr1,expr2):
+    if expr1:
+        return expr1
+    else:
+        return expr2
+
+
+""" NVL2(expr1, expr2, expr3)
+NVL2 lets you determine the value returned by a query based on whether a specified expression is null or not null. 
+If expr1 is not null, then NVL2 returns expr2. If expr1 is null, then NVL2 returns expr3.
+"""
+def oracle_nvl2(expr1,expr2,expr3):
+    if expr1:
+        return expr2
+    else:
+        return expr3
+    
+    
+"""
+Assert function is used for unit testing
+"""
+def assert_equals(expected,value,msg=""):
+    if value!=expected:
+        if msg !="":
+            return ( ("Test Failed: Expected: %s instead of %s TestCase:"+msg) % (expected,value))
+        else:
+            return ( "Test Failed: Expected: %s instead of %s" % (expected,value))
+    else:
+        return None
+    
+
 
 
 def showHelp():
     print("HELP:")
     print("Lite*Plus: your full stop to SQLite3 compatibility layer")
     print("Super charge your script with a bunch of ad-hoc python functions")
-    print("")
+    print(""" Commands:
+    .exit                        Exit from liteplus
+    .help                        This help message
+    """)
 
+registeredFunctions=0
 def main(argv=sys.argv):
 
     databaseName=argv[1]
@@ -94,24 +159,35 @@ def main(argv=sys.argv):
     sqlite3.enable_callback_tracebacks(True)
     
     def register(fname, args,func):
+        global registeredFunctions
         con.create_function(fname,args,func)
-        print("R*%i -> %s" % ( args,fname))
+        #print("R*%i -> %s" % ( args,fname))
+        registeredFunctions = registeredFunctions+1
+        
+    register('assert_equals',2,assert_equals)
+    register('assert_equals',3,assert_equals)
     
-    #con.create_function('regexp', 2, regexp)
     register('regexp_replace', 3, oracle_regexp_replace)
     register('regexp_replace', 4, oracle_regexp_replace)
     register('regexp_replace', 5, oracle_regexp_replace)
     register('regexp_replace', 6, oracle_regexp_replace)
+    
 
+    register('regexp_like',2,oracle_regexp_like)
+    register('regexp_like',3,oracle_regexp_like)
+
+    register('nvl',2,oracle_nvl)    
+    register('nvl2',3,oracle_nvl2)
+    
     # Push some math functions
     import math
     for f in [math.sin,math.cos,math.tan,math.ceil,math.floor]:
          register(f.__name__,1,f)
 
-    con.execute("pragma journal_mode=wal")
     con.execute("PRAGMA foreign_keys = ON")
+    #con.execute("pragma journal_mode=wal")
     
-    print("SQLite*Plus:%s on %s " % (sqlite3.sqlite_version, databaseName))
+    print("SQLite*Plus:%s on %s Registered Functions: %i" % (sqlite3.sqlite_version, databaseName, registeredFunctions))
     #print(databaseName+">")
     # REPL cycle
     buffer=""
@@ -125,12 +201,17 @@ def main(argv=sys.argv):
                 messages = con.execute(buffer)
             except Exception as e:
                 print("[LITE-ERROR]* \t"+repr(e))
+                print("\t%s" %(buffer))
             else:
-                for message in messages:
-                    print(message)
+                for message in messages:                    
+                    if str(message) !="(None,)":
+                        print(message)
+                    else:
+                        #print("<ok<"+buffer);
+                        pass
             commandExecuted +=1
             buffer=""
-            print("%i>" %(commandExecuted))
+            sys.stdout.write("%i>" %(commandExecuted))
         else:
             liteCmd=l.strip()
             if liteCmd=='.exit':
