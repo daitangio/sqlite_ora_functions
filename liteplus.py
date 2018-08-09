@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python
 # -*- mode: company ; mode: python  -*-
 """How to do regular expressions in sqlite3 (using python)."""
@@ -9,8 +10,48 @@ import time
 import datetime
 import sqlite3
 
+import functools
 
+####################################
+# Decorator to manage exception
+class handle_exception(object):
+    def __init__(self, f):
+        """
+        If there are no decorator arguments, the function
+        to be decorated is passed to the constructor.
+        """
+        self.f = f
 
+    def __call__(self, *args):
+        """
+        The __call__ method is not called until the
+        decorated function is called.
+        """
+        try:            
+            return self.f(*args)
+        except:
+            print("[LITE-ERROR] Exception thrown by %s: %s" % (self.f.__name__,sys.exc_info()[0]))
+            raise
+###################################
+
+"""
+https://docs.oracle.com/cd/B19306_01/server.102/b14200/functions183.htm
+TO_DATE(char [, fmt [, 'nlsparam' ] ])
+
+TO_DATE converts char of CHAR, VARCHAR2, NCHAR, or NVARCHAR2 datatype to a value of DATE datatype. The fmt is a datetime model format specifying the format of char. If you omit fmt, then char must be in the default date format. If fmt is J, for Julian, then char must be an integer.
+
+On SQLite date are in iso-8601 format: 'YYYY-MM-DD HH:MM:SS'
+
+Also, the supported format is the C standard (1989 version)
+
+The Function is cached for performance reason
+"""
+@handle_exception
+@functools.lru_cache(maxsize=64, typed=True)
+def oracle_to_date(string2convert, fmt, nlsparam=None):
+    dobj=datetime.datetime.strptime(string2convert, fmt)
+    # Return a nice Sqlite date string
+    return dobj.isoformat(sep=' ',timespec='seconds')
 """
 ORACLE:
 https://docs.oracle.com/database/121/SQLRF/functions163.htm#SQLRF06302
@@ -46,16 +87,13 @@ A period (.) does not match the newline character.
 The source string is treated as a single line.
 
 """
+@handle_exception
 def oracle_regexp_replace(source,pattern,replace_string,position=1,occurence=0,match_parameter=None):
-    try:
-        pythonFlags=translate_oracle_match_parameters(match_parameter)
-        if position == 1:
-            return re.sub(pattern,replace_string,source,count=occurence,flags=pythonFlags)
-        else:
-            return source[0:(position-1)] +  re.sub(pattern,replace_string,source[(position-1):],count=occurence,flags=pythonFlags)
-    except:
-        print("Unexpected error:", sys.exc_info()[0])
-        raise
+    pythonFlags=translate_oracle_match_parameters(match_parameter)
+    if position == 1:
+        return re.sub(pattern,replace_string,source,count=occurence,flags=pythonFlags)
+    else:
+        return source[0:(position-1)] +  re.sub(pattern,replace_string,source[(position-1):],count=occurence,flags=pythonFlags)
 
 
 
@@ -89,13 +127,10 @@ pattern is the regular expression. It is usually a text literal and can be of an
 match_parameter is a text literal that lets you change the default matching behavior of the function.
 
 """
+@handle_exception
 def oracle_regexp_like(source,pattern,match_parameter=None):
-    try:
-        pythonFlags=translate_oracle_match_parameters(match_parameter)
-        return 1 if re.search(pattern,source,flags=pythonFlags) else 0
-    except:
-        print("Unexpected error:", sys.exc_info()[0])
-        raise
+    pythonFlags=translate_oracle_match_parameters(match_parameter)
+    return 1 if re.search(pattern,source,flags=pythonFlags) else 0
 
 """
 Ref https://docs.oracle.com/database/121/SQLRF/functions131.htm#SQLRF00684
@@ -108,6 +143,7 @@ The arguments expr1 and expr2 can have any data type. If their data types are di
 
 
 """
+@handle_exception
 def oracle_nvl(expr1,expr2):
     if expr1:
         return expr1
@@ -119,6 +155,7 @@ def oracle_nvl(expr1,expr2):
 NVL2 lets you determine the value returned by a query based on whether a specified expression is null or not null. 
 If expr1 is not null, then NVL2 returns expr2. If expr1 is null, then NVL2 returns expr3.
 """
+@handle_exception
 def oracle_nvl2(expr1,expr2,expr3):
     if expr1:
         return expr2
@@ -129,6 +166,7 @@ def oracle_nvl2(expr1,expr2,expr3):
 """
 Assert function is used for unit testing
 """
+@handle_exception
 def assert_equals(expected,value,msg=""):
     if value!=expected:
         if msg !="":
@@ -137,9 +175,8 @@ def assert_equals(expected,value,msg=""):
             return ( "Test Failed: Expected: %s instead of %s" % (expected,value))
     else:
         return None
+
     
-
-
 
 def showHelp():
     print("HELP:")
@@ -150,6 +187,11 @@ def showHelp():
     .help                        This help message
     """)
 
+
+
+    
+
+# GLOBAL
 registeredFunctions=0
 def main(argv=sys.argv):
 
@@ -178,6 +220,9 @@ def main(argv=sys.argv):
 
     register('nvl',2,oracle_nvl)    
     register('nvl2',3,oracle_nvl2)
+
+    register('to_date',2,oracle_to_date)
+    register('to_date',3,oracle_to_date)
     
     # Push some math functions
     import math
@@ -200,7 +245,7 @@ def main(argv=sys.argv):
             try:
                 messages = con.execute(buffer)
             except Exception as e:
-                print("[LITE-ERROR]* \t"+repr(e))
+                print("[LITE-ERROR] \t"+repr(e))
                 print("\t%s" %(buffer))
             else:
                 for message in messages:                    
