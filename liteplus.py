@@ -247,10 +247,10 @@ def main(argv=sys.argv):
             except Exception as e:
                 print("[LITE-ERROR] \t"+repr(e))
                 print("\t%s" %(buffer))
-            else:
+            else:                
                 for message in messages:                    
                     if str(message) !="(None,)":
-                        print(message)
+                        print(message)                        
                     else:
                         #print("<ok<"+buffer);
                         pass
@@ -264,6 +264,10 @@ def main(argv=sys.argv):
                 break
             elif liteCmd=='.help':
                 showHelp()
+                buffer=""
+            elif liteCmd.startswith('.print '):
+                print("\n%i< %s\n"%(commandExecuted,liteCmd[6:]))
+                buffer=""
         
 if __name__ == '__main__':
     main()
