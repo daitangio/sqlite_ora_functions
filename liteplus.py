@@ -185,6 +185,7 @@ def showHelp():
     print(""" Commands:
     .exit                        Exit from liteplus
     .help                        This help message
+    .print  Message              
     """)
 
 
