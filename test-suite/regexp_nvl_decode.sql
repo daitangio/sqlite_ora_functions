@@ -27,5 +27,16 @@ select assert_equals(2,nvl(2,1),'NVL NOT NULL');
 select assert_equals('yeppa',nvl2('notnull','yeppa','failed')); 
 select assert_equals('yeppa',nvl2(NULL,'failed','yeppa')); 
 
+select assert_equals(2,decode('b','a',1,'b',2));
+select assert_equals('default',decode('tricked','a',1,'b',2,'default'));
 
+select assert_equals('New Jersey', DECODE (warehouse_id, 1, 'Southlake', 
+                             2, 'San Francisco', 
+                             3, 'New Jersey', 
+                             4, 'Seattle',
+                                'Non domestic') )
+from (select 3 as warehouse_id );
+
+select assert_equals(NULL,decode(1,999,2)) ;
+select assert_equals('default provided',decode(1,999,2,'default provided')) ;
 .exit

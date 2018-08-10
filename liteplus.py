@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python
 # -*- mode: company ; mode: python  -*-
 """How to do regular expressions in sqlite3 (using python)."""
@@ -30,9 +29,44 @@ class handle_exception(object):
         try:            
             return self.f(*args)
         except:
-            print("[LITE-ERROR] Exception thrown by %s: %s" % (self.f.__name__,sys.exc_info()[0]))
+            print("[LITE-ERROR] Detected Exception thrown by %s: %s" % (self.f.__name__,sys.exc_info()[0]))
             raise
 ###################################
+"""Yield successive n-sized chunks from l."""
+def chunks(l, n):
+    for i in range(0, len(l), n):
+        yield l[i:i + n]
+###################################
+"""
+decode(expression, search, result [,search, result]….[,default])
+
+DECODE compares expr to each search value one by one. If expr is equal to a search, then Oracle Database returns the corresponding result. If no match is found, then Oracle returns default. If default is omitted, then Oracle returns null.
+
+Ref https://docs.oracle.com/cd/B19306_01/server.102/b14200/functions040.htm
+
+The implementation required some work
+"""
+@handle_exception
+def oracle_decode(*arg):
+    # Now default is present if the size is
+    if(len(arg) < 3):
+        raise Exception('Provide at least 3 input to decode')
+    defaultPresent = (len(arg) %2) == 0
+    if defaultPresent:
+        defaultValue=arg[-1]
+        varlist=arg[1:-1]
+    else:
+        defaultValue=None
+        varlist=arg[1:]
+    expr=arg[0]
+    for pairs in list(chunks(varlist,2)):
+        search,result=pairs
+        #print(" %s -> %s " %(search,result))
+        if expr==search:
+            return result
+    return defaultValue
+
+#print(oracle_decode("zz",1,2,2,4,'default'))
 
 """
 https://docs.oracle.com/cd/B19306_01/server.102/b14200/functions183.htm
@@ -224,6 +258,9 @@ def main(argv=sys.argv):
 
     register('to_date',2,oracle_to_date)
     register('to_date',3,oracle_to_date)
+
+    # Decode accepts variable data
+    register('decode',-1,oracle_decode)
     
     # Push some math functions
     import math
@@ -246,8 +283,9 @@ def main(argv=sys.argv):
             try:
                 messages = con.execute(buffer)
             except Exception as e:
-                print("[LITE-ERROR] \t"+repr(e))
+                print("[LITE-ERROR] On the following chunk:")
                 print("\t%s" %(buffer))
+                print("[LITE-ERROR] \t"+repr(e))
             else:                
                 for message in messages:                    
                     if str(message) !="(None,)":
