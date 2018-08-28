@@ -11,6 +11,33 @@ import sqlite3
 
 import functools
 
+######################################
+# Low level support 
+######################################
+"""
+ Print a cursor result
+"""
+def printResult(cx):
+    currentRecord=cx.fetchone()
+    if currentRecord!=None:
+        sys.stdout.write('\n')
+        colnames=''+('|'.join(currentRecord.keys()))+'|'
+        sys.stdout.write(colnames+'\n')
+        for x in range(1,len(colnames)+1):
+            sys.stdout.write('-')
+        sys.stdout.write('\n')
+        while currentRecord != None:
+            row_str=str(tuple(currentRecord))
+            for elem in tuple(currentRecord):
+                if elem!=None:
+                    sys.stdout.write(elem)
+                else:
+                    sys.stdout.write("null")
+                sys.stdout.write('|')
+            sys.stdout.write('\n')
+            currentRecord=cx.fetchone()    
+
+
 ####################################
 # Decorator to manage exception
 class handle_exception(object):
@@ -86,6 +113,20 @@ def oracle_to_date(string2convert, fmt, nlsparam=None):
     dobj=datetime.datetime.strptime(string2convert, fmt)
     # Return a nice Sqlite date string
     return dobj.isoformat(sep=' ',timespec='seconds')
+
+""" 
+FIXME TO IMPLEMENT
+TO_CHAR
+TO_CHAR({ datetime | interval } [, fmt [, 'nlsparam' ] ])
+https://docs.oracle.com/cd/B19306_01/server.102/b14200/functions180.htm
+TO_CHAR (datetime) converts a datetime or interval value of DATE, TIMESTAMP, TIMESTAMP WITH TIME ZONE, or TIMESTAMP WITH LOCAL TIME ZONE datatype to a value of VARCHAR2 datatype in the format specified by the date format fmt. If you omit fmt, then date is converted to a VARCHAR2 value as follows: [....]
+
+The 'nlsparam' argument specifies the language in which month and day names and abbreviations are returned.
+"""
+@handle_exception
+def oracle_to_char(input,fmt=None,nlsparam=None):
+    pass
+
 """
 ORACLE:
 https://docs.oracle.com/database/121/SQLRF/functions163.htm#SQLRF06302
@@ -204,11 +245,11 @@ Assert function is used for unit testing
 def assert_equals(expected,value,msg=""):
     if value!=expected:
         if msg !="":
-            return ( ("Test Failed: Expected: %s instead of %s TestCase:"+msg) % (expected,value))
+            return ( ("Test FAILED: Expected: %s instead of %s TestCase:"+msg) % (expected,value))
         else:
-            return ( "Test Failed: Expected: %s instead of %s" % (expected,value))
+            return ( "Test FAILED: Expected: %s instead of %s" % (expected,value))
     else:
-        return None
+        return 'ok'
 
     
 
@@ -224,7 +265,6 @@ def showHelp():
 
 
 
-    
 
 # GLOBAL
 registeredFunctions=0
@@ -275,27 +315,23 @@ def main(argv=sys.argv):
     # REPL cycle
     buffer=""
     commandExecuted=0
+    con.row_factory = sqlite3.Row
     while True:
         l=sys.stdin.readline()
         buffer += l
         if ';' in l:
             # See https://github.com/jonathanslenders/python-prompt-toolkit/blob/master/examples/tutorial/sqlite-cli.py
             try:
-                messages = con.execute(buffer)
+                cx=con.cursor()
+                cx.execute(buffer)
+                printResult(cx)
             except Exception as e:
                 print("[LITE-ERROR] On the following chunk:")
                 print("\t%s" %(buffer))
                 print("[LITE-ERROR] \t"+repr(e))
-            else:                
-                for message in messages:                    
-                    if str(message) !="(None,)":
-                        print(message)                        
-                    else:
-                        #print("<ok<"+buffer);
-                        pass
             commandExecuted +=1
             buffer=""
-            sys.stdout.write("%i>" %(commandExecuted))
+            sys.stdout.write("\n%i>" %(commandExecuted))
         else:
             liteCmd=l.strip()
             if liteCmd=='.exit':
@@ -305,7 +341,7 @@ def main(argv=sys.argv):
                 showHelp()
                 buffer=""
             elif liteCmd.startswith('.print '):
-                print("\n%i< %s\n"%(commandExecuted,liteCmd[6:]))
+                print("\n%s\n"%(liteCmd[6:]))
                 buffer=""
         
 if __name__ == '__main__':
