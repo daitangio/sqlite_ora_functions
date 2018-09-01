@@ -30,7 +30,7 @@ def printResult(cx):
             row_str=str(tuple(currentRecord))
             for elem in tuple(currentRecord):
                 if elem!=None:
-                    sys.stdout.write(elem)
+                    sys.stdout.write(str(elem))
                 else:
                     sys.stdout.write("null")
                 sys.stdout.write('|')
