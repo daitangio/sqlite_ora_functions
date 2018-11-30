@@ -64,6 +64,7 @@ def chunks(l, n):
     for i in range(0, len(l), n):
         yield l[i:i + n]
 ###################################
+#################### FUNCTIONS STARTS HERWE ##############################
 """
 decode(expression, search, result [,search, result]….[,default])
 
@@ -236,7 +237,23 @@ def oracle_nvl2(expr1,expr2,expr3):
         return expr2
     else:
         return expr3
+
+
+## IMAP EMAIL FUNCTIONS
+""" WORK IN PROGRESS
+    imap_headers(server,user,password,path [, searchspec])
+    List all emails header from an imap server
+
+
+See also
+https://gist.github.com/robulouski/7441883
+
+https://oracle-base.com/articles/10g/utl_mail-send-email-from-the-oracle-database
     
+"""
+@handle_exception
+def getImapMailboxHeaders(server,user,password,path,searchSpec=None):
+    raise Exception("Not yet implemented")
     
 """
 Assert function is used for unit testing
