@@ -270,6 +270,24 @@ def getImapMailboxHeaders(server,user,password,path,searchSpec=None):
     # TODO CONTINUE    
     raise Exception("Still not implemented")
 
+
+"""
+ Enable access to file system
+"""
+@handle_exception
+def filesystem_fs(path_str, glob_stuff="*/**"):
+    from pathlib import Path
+    print( "yep ",path_str)
+    l=[]
+    for f in list(Path(path_str).glob(glob_stuff)):
+        l.append(f.name)
+    print("Returning",l)
+    return l
+
+
+########################## SUPPORT
+
+
 """
 Assert function is used for unit testing
 """
@@ -333,6 +351,9 @@ def main(argv=sys.argv):
 
     # Decode accepts variable data
     register('decode',-1,oracle_decode)
+
+    register("fs",1,filesystem_fs)
+    register("fs",2,filesystem_fs)
     
     # Push some math functions
     import math
