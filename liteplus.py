@@ -241,20 +241,35 @@ def oracle_nvl2(expr1,expr2,expr3):
 
 ## IMAP EMAIL FUNCTIONS
 """ WORK IN PROGRESS
-    imap_headers(server,user,password,path [, searchspec])
-    List all emails header from an imap server
-
+    imap_headers(server,user,password,path , index, [, searchspec])
+    Load specified email header from an imap server. index starts from 0.
+    
+    Example
+    imap_headers( 'imap.gmail.com','notatallawhistleblowerIswear@gmail.com','secret','folder',0)
 
 See also
 https://gist.github.com/robulouski/7441883
-
 https://oracle-base.com/articles/10g/utl_mail-send-email-from-the-oracle-database
-    
+https://docs.python.org/3/library/sqlite3.html#sqlite3.Connection.create_aggregate
+
 """
 @handle_exception
 def getImapMailboxHeaders(server,user,password,path,searchSpec=None):
-    raise Exception("Not yet implemented")
-    
+    import imaplib, getpass,email,email.header
+
+    M = imaplib.IMAP4_SSL(server)
+
+    try:
+        rv, data = M.login(user, password)        
+    except imaplib.IMAP4.error as err:
+        raise err
+    rv, mailboxes = M.list()
+    if rv != 'OK':
+        raise Exception("Cannot list mailboxes:"+rv)
+    rv, data = M.select(path)
+    # TODO CONTINUE    
+    raise Exception("Still not implemented")
+
 """
 Assert function is used for unit testing
 """
