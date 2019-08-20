@@ -275,14 +275,12 @@ def getImapMailboxHeaders(server,user,password,path,searchSpec=None):
  Enable access to file system
 """
 @handle_exception
-def filesystem_fs(path_str, glob_stuff="*/**"):
-    from pathlib import Path
-    print( "yep ",path_str)
+def filesystem_fs(path_str, glob_stuff="*"):
+    from pathlib import Path    
     l=[]
-    for f in list(Path(path_str).glob(glob_stuff)):
-        l.append(f.name)
-    print("Returning",l)
-    return l
+    for f in Path(path_str).glob(glob_stuff):
+        l.append(f.name)    
+    return ','.join(l)
 
 
 ########################## SUPPORT
