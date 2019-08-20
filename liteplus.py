@@ -359,6 +359,8 @@ def showHelp():
     .help                        This help message
     .print  Message              
     .dump                        Execute a dump of the current database
+
+    The prompt show the commands executed and the total changes executed so far.
     """
     )
 
@@ -366,6 +368,12 @@ def showHelp():
 # GLOBAL
 registeredFunctions = 0
 
+# Constants
+
+# Limit to the buffer for the statement execution
+# Oracle PLSQL has a 32KB limit on literals.
+# We use the same limit here.
+MAX_BUFFER_SIZE_KB=32
 
 def main(argv=sys.argv):
 
@@ -410,14 +418,13 @@ def main(argv=sys.argv):
         register(f.__name__, 1, f)
 
     con.execute("PRAGMA foreign_keys = ON")
-    # con.execute("pragma journal_mode=wal")
+    # con.execute("pragma journal_mode=wal")    
     LITE_PLUS_VERSION = "SQLite*Plus:%s on %s Registered Functions: %i" % (
         sqlite3.sqlite_version,
         databaseName,
         registeredFunctions,
     )
     print(LITE_PLUS_VERSION)
-    # print(databaseName+">")
     # REPL cycle
     buffer = ""
     commandExecuted = 0
@@ -425,6 +432,8 @@ def main(argv=sys.argv):
     while True:
         l = sys.stdin.readline()
         buffer += l
+        if len(buffer) >(MAX_BUFFER_SIZE_KB*1024):
+            raise Exception( ("BUFFER OVERFLOW ERROR Line too long. Limit: %i Kb Offending line:\nSTART:%s\nEND:%s\n" % (MAX_BUFFER_SIZE_KB, buffer[0:70], buffer[-70:])))
         if ";" in l:
             # See https://github.com/jonathanslenders/python-prompt-toolkit/blob/master/examples/tutorial/sqlite-cli.py
             try:
