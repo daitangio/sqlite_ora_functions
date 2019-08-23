@@ -7,7 +7,7 @@ mkdir -p  build
 for f in test-suite/*; do
     logfile=build/test_report_$(basename $f).log
     set +e
-    python ./liteplus.py :memory: >& $logfile <$f    
+    python ./liteplus.py :memory: >& $logfile <$f    || (echo "$f _FAILED_  "  ; cat $logfile)
     if egrep   -C8 'FAILED|OperationalError|BUFFER OVERFLOW ERROR' $logfile >/dev/null; then
         echo "[$f]" FAILED
         cat $logfile 
