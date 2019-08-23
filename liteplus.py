@@ -41,28 +41,32 @@ def printResult(cx):
 
 
 ####################################
-# Decorator to manage exception
-class handle_exception(object):
-    def __init__(self, f):
-        """
-        If there are no decorator arguments, the function
-        to be decorated is passed to the constructor.
-        """
-        self.f = f
+class SqliteFunctionException(Exception):
+    pass
 
-    def __call__(self, *args):
-        """
-        The __call__ method is not called until the
-        decorated function is called.
-        """
-        try:
-            return self.f(*args)
-        except:
-            print(
-                "[LITE-ERROR] Detected Exception thrown by %s: %s"
-                % (self.f.__name__, sys.exc_info()[0])
-            )
-            raise
+
+# Decorator to register functions and  to manage exception
+## from functools  import wraps
+GLOBAL_REGISTER_LIST = []
+
+
+def sql_register(sql_name, numargs):
+    def wrap(f):
+        GLOBAL_REGISTER_LIST.append((sql_name, numargs, f))
+
+        def wrapped_f(*args):
+            try:
+                return f(*args)
+            except:
+                print(
+                    "[LITE-ERROR] Detected Exception thrown by %s: %s"
+                    % (f.__name__, sys.exc_info()[0])
+                )
+                raise
+
+        return wrapped_f
+
+    return wrap
 
 
 ###################################
@@ -87,7 +91,7 @@ The implementation required some work
 """
 
 
-@handle_exception
+@sql_register("decode", -1)
 def oracle_decode(*arg):
     # Now default is present if the size is
     if len(arg) < 3:
@@ -124,7 +128,8 @@ The Function is cached for performance reason
 """
 
 
-@handle_exception
+@sql_register("to_date", 2)
+@sql_register("to_date", 3)
 @functools.lru_cache(maxsize=64, typed=True)
 def oracle_to_date(string2convert, fmt, nlsparam=None):
     dobj = datetime.datetime.strptime(string2convert, fmt)
@@ -143,7 +148,6 @@ The 'nlsparam' argument specifies the language in which month and day names and 
 """
 
 
-@handle_exception
 def oracle_to_char(input, fmt=None, nlsparam=None):
     pass
 
@@ -185,7 +189,10 @@ The source string is treated as a single line.
 """
 
 
-@handle_exception
+@sql_register("regexp_replace", 3)
+@sql_register("regexp_replace", 4)
+@sql_register("regexp_replace", 5)
+@sql_register("regexp_replace", 6)
 def oracle_regexp_replace(
     source, pattern, replace_string, position=1, occurence=0, match_parameter=None
 ):
@@ -237,7 +244,8 @@ match_parameter is a text literal that lets you change the default matching beha
 """
 
 
-@handle_exception
+@sql_register("regexp_like", 2)
+@sql_register("regexp_like", 3)
 def oracle_regexp_like(source, pattern, match_parameter=None):
     pythonFlags = translate_oracle_match_parameters(match_parameter)
     return 1 if re.search(pattern, source, flags=pythonFlags) else 0
@@ -256,7 +264,7 @@ The arguments expr1 and expr2 can have any data type. If their data types are di
 """
 
 
-@handle_exception
+@sql_register("nvl", 2)
 def oracle_nvl(expr1, expr2):
     if expr1:
         return expr1
@@ -270,7 +278,7 @@ If expr1 is not null, then NVL2 returns expr2. If expr1 is null, then NVL2 retur
 """
 
 
-@handle_exception
+@sql_register("nvl2", 3)
 def oracle_nvl2(expr1, expr2, expr3):
     if expr1:
         return expr2
@@ -294,7 +302,6 @@ https://docs.python.org/3/library/sqlite3.html#sqlite3.Connection.create_aggrega
 """
 
 
-@handle_exception
 def getImapMailboxHeaders(server, user, password, path, searchSpec=None):
     import imaplib, getpass, email, email.header
 
@@ -317,7 +324,8 @@ def getImapMailboxHeaders(server, user, password, path, searchSpec=None):
 """
 
 
-@handle_exception
+@sql_register("fs", 1)
+@sql_register("fs", 2)
 def filesystem_fs(path_str, glob_stuff="*", sep=","):
     from pathlib import Path
 
@@ -325,6 +333,11 @@ def filesystem_fs(path_str, glob_stuff="*", sep=","):
     for f in Path(path_str).glob(glob_stuff):
         l.append(f.name)
     return sep.join(l)
+
+
+@sql_register("raise_exception", 1)
+def raise_exception(exception_string):
+    raise Exception(exception_string)
 
 
 ########################## SUPPORT
@@ -335,7 +348,8 @@ Assert function is used for unit testing
 """
 
 
-@handle_exception
+@sql_register("assert_equals", 2)
+@sql_register("assert_equals", 3)
 def assert_equals(expected, value, msg=""):
     if value != expected:
         if msg != "":
@@ -373,7 +387,8 @@ registeredFunctions = 0
 # Limit to the buffer for the statement execution
 # Oracle PLSQL has a 32KB limit on literals.
 # We use the same limit here.
-MAX_BUFFER_SIZE_KB=32
+MAX_BUFFER_SIZE_KB = 32
+
 
 def main(argv=sys.argv):
 
@@ -388,37 +403,16 @@ def main(argv=sys.argv):
         # print("R*%i -> %s" % ( args,fname))
         registeredFunctions = registeredFunctions + 1
 
-    register("assert_equals", 2, assert_equals)
-    register("assert_equals", 3, assert_equals)
+    for func_name, args, f in GLOBAL_REGISTER_LIST:
+        register(func_name, args, f)
 
-    register("regexp_replace", 3, oracle_regexp_replace)
-    register("regexp_replace", 4, oracle_regexp_replace)
-    register("regexp_replace", 5, oracle_regexp_replace)
-    register("regexp_replace", 6, oracle_regexp_replace)
-
-    register("regexp_like", 2, oracle_regexp_like)
-    register("regexp_like", 3, oracle_regexp_like)
-
-    register("nvl", 2, oracle_nvl)
-    register("nvl2", 3, oracle_nvl2)
-
-    register("to_date", 2, oracle_to_date)
-    register("to_date", 3, oracle_to_date)
-
-    # Decode accepts variable data
-    register("decode", -1, oracle_decode)
-
-    register("fs", 1, filesystem_fs)
-    register("fs", 2, filesystem_fs)
-
-    # Push some math functions
     import math
 
     for f in [math.sin, math.cos, math.tan, math.ceil, math.floor]:
         register(f.__name__, 1, f)
 
     con.execute("PRAGMA foreign_keys = ON")
-    # con.execute("pragma journal_mode=wal")    
+    # con.execute("pragma journal_mode=wal")
     LITE_PLUS_VERSION = "SQLite*Plus:%s on %s Registered Functions: %i" % (
         sqlite3.sqlite_version,
         databaseName,
@@ -432,8 +426,13 @@ def main(argv=sys.argv):
     while True:
         l = sys.stdin.readline()
         buffer += l
-        if len(buffer) >(MAX_BUFFER_SIZE_KB*1024):
-            raise Exception( ("BUFFER OVERFLOW ERROR Line too long. Limit: %i Kb Offending line:\nSTART:%s\nEND:%s\n" % (MAX_BUFFER_SIZE_KB, buffer[0:70], buffer[-70:])))
+        if len(buffer) > (MAX_BUFFER_SIZE_KB * 1024):
+            raise Exception(
+                (
+                    "BUFFER OVERFLOW ERROR Line too long. Limit: %i Kb Offending line:\nSTART:%s\nEND:%s\n"
+                    % (MAX_BUFFER_SIZE_KB, buffer[0:70], buffer[-70:])
+                )
+            )
         if ";" in l:
             # See https://github.com/jonathanslenders/python-prompt-toolkit/blob/master/examples/tutorial/sqlite-cli.py
             try:
