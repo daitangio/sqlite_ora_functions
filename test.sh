@@ -9,11 +9,19 @@ for f in test-suite/*; do
     set +e
     python ./liteplus.py :memory: >& $logfile <$f    || (echo "$f _FAILED_  "  ; cat $logfile)
     if egrep   -C8 'FAILED|OperationalError|BUFFER OVERFLOW ERROR' $logfile >/dev/null; then
-        echo "[$f]" FAILED
-        cat $logfile 
+        if echo $f | grep exception_ >/dev/null ; then
+            echo "[$f] EXCEPTION PASSED"
+        else
+            echo "[$f]" FAILED
+        fi
+        #cat $logfile 
         #exit 1000
     else
-        echo "[$f]" PASSED
+        if echo $f | grep exception_ >/dev/null ; then
+            echo "[$f] EXCEPTION FAILED"
+        else
+            echo "[$f]" PASSED
+        fi
     fi
     set -e
 done

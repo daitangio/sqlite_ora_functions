@@ -50,19 +50,19 @@ class SqliteFunctionException(Exception):
 GLOBAL_REGISTER_LIST = []
 
 
-def sql_register(sql_name, numargs):
+def sql_register(sql_name, numargs, numargs2=None, numargs3=None, numargs4=None, numargs5=None):
     def wrap(f):
         GLOBAL_REGISTER_LIST.append((sql_name, numargs, f))
-
+        if numargs2!=None:
+            GLOBAL_REGISTER_LIST.append((sql_name, numargs2, f))
+        if numargs3!=None:
+            GLOBAL_REGISTER_LIST.append((sql_name, numargs3, f))
+        if numargs4!=None:
+            GLOBAL_REGISTER_LIST.append((sql_name, numargs4, f))
+        if numargs5!=None:
+            GLOBAL_REGISTER_LIST.append((sql_name, numargs5, f))            
         def wrapped_f(*args):
-            try:
-                return f(*args)
-            except:
-                print(
-                    "[LITE-ERROR] Detected Exception thrown by %s: %s"
-                    % (f.__name__, sys.exc_info()[0])
-                )
-                raise
+            return f(*args)
 
         return wrapped_f
 
@@ -128,8 +128,7 @@ The Function is cached for performance reason
 """
 
 
-@sql_register("to_date", 2)
-@sql_register("to_date", 3)
+@sql_register("to_date", 2,3)
 @functools.lru_cache(maxsize=64, typed=True)
 def oracle_to_date(string2convert, fmt, nlsparam=None):
     dobj = datetime.datetime.strptime(string2convert, fmt)
@@ -189,10 +188,7 @@ The source string is treated as a single line.
 """
 
 
-@sql_register("regexp_replace", 3)
-@sql_register("regexp_replace", 4)
-@sql_register("regexp_replace", 5)
-@sql_register("regexp_replace", 6)
+@sql_register("regexp_replace", 3,4,5,6)
 def oracle_regexp_replace(
     source, pattern, replace_string, position=1, occurence=0, match_parameter=None
 ):
@@ -244,8 +240,7 @@ match_parameter is a text literal that lets you change the default matching beha
 """
 
 
-@sql_register("regexp_like", 2)
-@sql_register("regexp_like", 3)
+@sql_register("regexp_like", 2,3)
 def oracle_regexp_like(source, pattern, match_parameter=None):
     pythonFlags = translate_oracle_match_parameters(match_parameter)
     return 1 if re.search(pattern, source, flags=pythonFlags) else 0
@@ -324,8 +319,7 @@ def getImapMailboxHeaders(server, user, password, path, searchSpec=None):
 """
 
 
-@sql_register("fs", 1)
-@sql_register("fs", 2)
+@sql_register("fs", 1,2)
 def filesystem_fs(path_str, glob_stuff="*", sep=","):
     from pathlib import Path
 
@@ -337,7 +331,7 @@ def filesystem_fs(path_str, glob_stuff="*", sep=","):
 
 @sql_register("raise_exception", 1)
 def raise_exception(exception_string):
-    raise Exception(exception_string)
+    raise SqliteFunctionException(exception_string)
 
 
 ########################## SUPPORT
@@ -348,8 +342,7 @@ Assert function is used for unit testing
 """
 
 
-@sql_register("assert_equals", 2)
-@sql_register("assert_equals", 3)
+@sql_register("assert_equals", 2,3)
 def assert_equals(expected, value, msg=""):
     if value != expected:
         if msg != "":
