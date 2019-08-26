@@ -405,6 +405,8 @@ def main(argv=sys.argv):
         register(f.__name__, 1, f)
 
     con.execute("PRAGMA foreign_keys = ON")
+    # See https://en.wikipedia.org/wiki/DUAL_table
+    con.execute("CREATE VIEW if not exists  dual AS SELECT 'x' AS dummy")
     # con.execute("pragma journal_mode=wal")
     LITE_PLUS_VERSION = "SQLite*Plus:%s on %s Registered Functions: %i" % (
         sqlite3.sqlite_version,
