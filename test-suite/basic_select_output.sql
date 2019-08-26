@@ -13,7 +13,24 @@ select julianday('now') as sysdate from dual;
 -- for systdate modifications
 
 
+-- Rowid: here no super power needed. The same oracle code works on sqlite
+create table dup_table (column1 text, column2 text, column3 text);
 
+insert into dup_table values('1','2','3');
+insert into dup_table values('1','2','3');
+insert into dup_table values('1','3','3');
+insert into dup_table values('1','3','3');
+
+
+select rowid, column1 || '_' || column2 || '_' || column3 as COL_MERGE from dup_table;
+
+DELETE FROM dup_table
+WHERE rowid not in
+    (SELECT MIN(rowid)
+    FROM dup_table
+    GROUP BY column1, column2);
+
+select assert_equals(2, count(*)) from dup_table;
 
 
 -- Basic dump test
