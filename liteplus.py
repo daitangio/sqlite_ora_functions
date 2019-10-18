@@ -394,7 +394,7 @@ def help_fun(func_input):
 
 @sql_register("lite_plus_functions",0)
 def lite_plus_tot_functions():
-    """ Return the total number of lite_plus function extention"""
+    """ Return the total number of lite_plus function extentions."""
     return len(GLOBAL_REGISTER_LIST)
 
 @sql_register("lite_plus",1)
@@ -438,6 +438,8 @@ def main(argv=sys.argv):
 
     for f in [math.sin, math.cos, math.tan, math.ceil, math.floor]:
         register(f.__name__, 1, f)
+        GLOBAL_REGISTER_LIST.append((f.__name__,1,f))
+
 
     con.execute("PRAGMA foreign_keys = ON")
     # See https://en.wikipedia.org/wiki/DUAL_table
@@ -448,17 +450,26 @@ def main(argv=sys.argv):
         databaseName,
         registeredFunctions,
     )
-    
-    repl_cycle(con, LITE_PLUS_VERSION)
+    if len(argv)==2:
+        repl_cycle(con, LITE_PLUS_VERSION)
+    else:
+        execute_files(argv[2:],con, LITE_PLUS_VERSION)
 
-def repl_cycle(con, lite_plus_ver):
+def execute_files(flist,con, lite_plus_ver):
+    for fname in flist:
+        #print("Processing", fname)
+        with open(fname,"r") as f:
+            repl_cycle(con,lite_plus_ver,f)
+
+def repl_cycle(con, lite_plus_ver, input_file=sys.stdin):
     # REPL cycle
-    sys.stdout.write(lite_plus_ver)
+    if input_file ==sys.stdin:
+        sys.stdout.write(lite_plus_ver)
     buffer = ""
     commandExecuted = 0
     con.row_factory = sqlite3.Row
     while True:
-        l = sys.stdin.readline()
+        l = input_file.readline()
         buffer += l
         if len(buffer) > (MAX_BUFFER_SIZE_KB * 1024):
             raise Exception(
@@ -479,7 +490,9 @@ def repl_cycle(con, lite_plus_ver):
                 sys.stdout.write("[LITE-ERROR] \t" + repr(e))
             commandExecuted += 1
             buffer = ""
-            sys.stdout.write("\n%i-%i>" % (commandExecuted, con.total_changes))
+            # Present prompt only if interactive:
+            if input_file ==sys.stdin:
+                sys.stdout.write("\n%i-%i>" % (commandExecuted, con.total_changes))
         else:
             liteCmd = l.strip()
             if liteCmd == ".exit":

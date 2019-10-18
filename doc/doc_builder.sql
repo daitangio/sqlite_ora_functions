@@ -1,4 +1,4 @@
-.print Auto generated documentation via pythn doc strings
+.print Auto generated documentation via python doc strings
 
 WITH RECURSIVE
   cnt(x) AS (
@@ -16,7 +16,7 @@ SELECT
 =======================================
 ' ||help(func_name)  || '
 '
-END )
+END ) as autodoc
 from (
 SELECT distinct lite_plus(x) as func_name FROM cnt order by 1);
 
