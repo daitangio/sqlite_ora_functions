@@ -373,6 +373,10 @@ def showHelp():
     .dump                        Execute a dump of the current database
 
     The prompt show the commands executed and the total changes executed so far.
+   
+    select help("nvl")  ;   Get full documentation on nvl
+
+
     """
     )
 
@@ -383,6 +387,16 @@ def help_fun(func_input):
         if func_name == func_input:
             return str(f.__doc__)
     return "No function defined:"+str(func_input)
+
+@sql_register("lite_plus_functions",0)
+def lite_plus_tot_functions():
+    return len(GLOBAL_REGISTER_LIST)
+
+@sql_register("lite_plus",1)
+def lite_plus_function_list(i):
+    func_name, args, f = GLOBAL_REGISTER_LIST[i]
+    return str(func_name)
+    
 
 # GLOBAL
 registeredFunctions = 0
