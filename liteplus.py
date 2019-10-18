@@ -84,7 +84,7 @@ def chunks(l, n):
 @sql_register("decode", -1)
 def oracle_decode(*arg):
     """
-    decode(expression, search, result [,search, result]….[,default])
+    decode(expression, search, result [,search, result]...[,default])
 
     DECODE compares expr to each search value one by one. If expr is equal to a search, then Oracle Database returns the corresponding result. If no match is found, then Oracle returns default. If default is omitted, then Oracle returns null.
 
