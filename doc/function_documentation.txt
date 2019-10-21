@@ -1,0 +1,167 @@
+
+ Auto generated documentation via python doc strings
+
+autodoc|
+--------
+FUNCTION:assert_equals
+=======================================
+
+    Assert function is used for unit testing
+    
+|
+FUNCTION:ceil
+=======================================
+ceil(x)
+
+Return the ceiling of x as an Integral.
+This is the smallest integer >= x.
+|
+FUNCTION:cos
+=======================================
+cos(x)
+
+Return the cosine of x (measured in radians).
+|
+FUNCTION:floor
+=======================================
+floor(x)
+
+Return the floor of x as an Integral.
+This is the largest integer <= x.
+|
+FUNCTION:fs
+=======================================
+
+    fs(path_str, glob_stuff="*", sep=",")
+    Enable access to file system: list files
+    
+|
+FUNCTION:help
+=======================================
+Provide support for docstring documentation PEP-257
+|
+FUNCTION:lite_plus
+=======================================
+ Return the name of the i-function extension, in definition order. Order may change between implementations
+    Take a look at doc/doc_builder.sql
+    for an example usage of this function
+    
+|
+FUNCTION:lite_plus_functions
+=======================================
+ Return the total number of lite_plus function extentions.
+|
+FUNCTION:nvl
+=======================================
+
+    Ref https://docs.oracle.com/database/121/SQLRF/functions131.htm#SQLRF00684
+
+    NVL(expr1, expr2)
+
+    NVL lets you replace null (returned as a blank) with a string in the results of a query. If expr1 is null, then NVL returns expr2. If expr1 is not null, then NVL returns expr1.
+
+    The arguments expr1 and expr2 can have any data type. If their data types are different, then Oracle Database implicitly converts one to the other. If they cannot be converted implicitly, then the database returns an error. The implicit conversion is implemented as follows:
+
+
+    
+|
+FUNCTION:nvl2
+=======================================
+ NVL2(expr1, expr2, expr3)
+        NVL2 lets you determine the value returned by a query based on whether a specified expression is null or not null. 
+        If expr1 is not null, then NVL2 returns expr2. If expr1 is null, then NVL2 returns expr3.
+    
+|
+FUNCTION:raise_exception
+=======================================
+ 
+    Used to raise an exception string and halt execution
+
+    
+|
+FUNCTION:regexp_like
+=======================================
+
+    Ref https://docs.oracle.com/database/121/SQLRF/conditions007.htm#SQLRF00501
+
+    REGEXP_LIKE is similar to the LIKE condition, except REGEXP_LIKE performs regular expression matching instead of the simple pattern matching performed by LIKE. This condition evaluates strings using characters as defined by the input character set.
+
+    REGEXP_LIKE(source_char, pattern
+                [, match_param ]
+            )
+
+    source_char is a character expression that serves as the search value. It is commonly a character column and can be of any of the data types CHAR, VARCHAR2, NCHAR, NVARCHAR2, CLOB, or NCLOB.
+
+    pattern is the regular expression. It is usually a text literal and can be of any of the data types CHAR, VARCHAR2, NCHAR, or NVARCHAR2. It can contain up to 512 bytes. If the data type of pattern is different from the data type of source_char, Oracle converts pattern to the data type of source_char. For a listing of the operators you can specify in pattern, refer to Appendix D, "Oracle Regular Expression Support".
+
+    match_parameter is a text literal that lets you change the default matching behavior of the function.
+
+    
+|
+FUNCTION:regexp_replace
+=======================================
+
+    ORACLE:
+    https://docs.oracle.com/database/121/SQLRF/functions163.htm#SQLRF06302
+
+    REGEXP_REPLACE(source,pattern,replace_string[,position,occurence,match_param])
+
+    position is a positive integer indicating the character of source_char where Oracle should begin the search. The default is 1, meaning that Oracle begins the search at the first character of source_char.
+
+    match_parameter is a text literal that lets you change the default matching behavior of the function. The behavior of this parameter 
+    is the same for this function as for REGEXP_COUNT. 
+    match_param is a text literal that lets you change the default matching behavior of the function. You can specify one or more of the following values for match_param:
+
+    'i' specifies case-insensitive matching.
+
+    'c' specifies case-sensitive matching.
+
+    'n' allows the period (.), which is the match-any-character character, to match the newline character. If you omit this parameter, then the period does not match the newline character.
+
+    'm' treats the source string as multiple lines. Oracle interprets the caret (^) and dollar sign ($) as the start and end, respectively, of any line anywhere in the source string, rather than only at the start or end of the entire source string. If you omit this parameter, then Oracle treats the source string as a single line.
+
+    'x' ignores whitespace characters. By default, whitespace characters match themselves.
+
+    GG: UNIMPLEMENTED
+
+    If you specify multiple contradictory values, then Oracle uses the last value. For example, if you specify 'ic', then Oracle uses case-sensitive matching. If you specify a character other than those shown above, then Oracle returns an error.
+
+    If you omit match_param, then:
+
+    The default case sensitivity is determined by the value of the NLS_SORT parameter.
+
+    A period (.) does not match the newline character.
+
+    The source string is treated as a single line.
+
+    
+|
+FUNCTION:sin
+=======================================
+sin(x)
+
+Return the sine of x (measured in radians).
+|
+FUNCTION:tan
+=======================================
+tan(x)
+
+Return the tangent of x (measured in radians).
+|
+FUNCTION:to_date
+=======================================
+
+    https://docs.oracle.com/cd/B19306_01/server.102/b14200/functions183.htm
+    TO_DATE(char [, fmt [, 'nlsparam' ] ])
+
+    TO_DATE converts char of CHAR, VARCHAR2, NCHAR, or NVARCHAR2 datatype to a value of DATE datatype. 
+    The fmt is a datetime model format specifying the format of char. If you omit fmt, then char must be in the default date format. 
+    If fmt is J, for Julian, then char must be an integer.
+
+    On SQLite date are in iso-8601 format: 'YYYY-MM-DD HH:MM:SS'
+
+    Also, the supported format is the C standard (1989 version)
+
+    The Function is cached for performance reason
+    
+|
