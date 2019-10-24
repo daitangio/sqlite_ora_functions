@@ -397,6 +397,10 @@ def lite_plus_tot_functions():
     """ Return the total number of lite_plus function extentions."""
     return len(GLOBAL_REGISTER_LIST)
 
+@sql_register("lite_plus_funcions_table",0)
+def create_lite_plus_table():
+    pass
+
 @sql_register("lite_plus",1)
 def lite_plus_function_list(i):
     """ Return the name of the i-function extension, in definition order. Order may change between implementations

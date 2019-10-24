@@ -11,22 +11,18 @@ FUNCTION:assert_equals
 |
 FUNCTION:ceil
 =======================================
-ceil(x)
-
 Return the ceiling of x as an Integral.
+
 This is the smallest integer >= x.
 |
 FUNCTION:cos
 =======================================
-cos(x)
-
 Return the cosine of x (measured in radians).
 |
 FUNCTION:floor
 =======================================
-floor(x)
-
 Return the floor of x as an Integral.
+
 This is the largest integer <= x.
 |
 FUNCTION:fs
@@ -47,6 +43,7 @@ FUNCTION:lite_plus
     for an example usage of this function
     
 |
+FUNCTION:lite_plus_funcions_table!UNDOCUMENTED!|
 FUNCTION:lite_plus_functions
 =======================================
  Return the total number of lite_plus function extentions.
@@ -138,14 +135,10 @@ FUNCTION:regexp_replace
 |
 FUNCTION:sin
 =======================================
-sin(x)
-
 Return the sine of x (measured in radians).
 |
 FUNCTION:tan
 =======================================
-tan(x)
-
 Return the tangent of x (measured in radians).
 |
 FUNCTION:to_date
