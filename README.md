@@ -5,7 +5,12 @@ SQLite Oracle Function extensions written in Python3
 # Requirements
 Tested on Python 3.7.x
 
+# FOR IMAP TESTING
+Consider using
 
+docker run -d --name dovecot_imap -p 143:143 -p 993:993 dovecot/dovecot:2.3.8
+It will accept every user with password "pass"
+See https://hub.docker.com/r/dovecot/dovecot
 
  
 # To watchout
