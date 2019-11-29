@@ -32,9 +32,45 @@ FUNCTION:fs
     Enable access to file system: list files
     
 |
+FUNCTION:get_env
+=======================================
+Get an environment variable, return None if it doesn't exist.
+    The optional second argument can specify an alternate default.
+    key, default and the result are str.
+|
 FUNCTION:help
 =======================================
 Provide support for docstring documentation PEP-257
+|
+FUNCTION:imap_count
+=======================================
+
+    
+    imap_count(server,user,password,[path[,searchSpec])
+
+    Return the number of emails in the selected path. To use with imap_email
+    
+    Return -1 on error
+    
+|
+FUNCTION:imap_email
+=======================================
+ 
+        imap_headers(server, user, password, index, path="INBOX",  searchSpec=None)
+        Load specified email header from an imap server. index starts from 0.
+        
+        Example
+            WITH RECURSIVE
+            cnt(x) AS (VALUES(1) UNION ALL SELECT x+1 FROM cnt WHERE x<imap_count("127.0.0.1","jj","pass","test"))
+            select x-1 as num, imap_email("127.0.0.1","jj","pass",x-1,"test") as message FROM cnt;
+
+
+    See also
+    https://gist.github.com/robulouski/7441883
+    https://oracle-base.com/articles/10g/utl_mail-send-email-from-the-oracle-database
+    https://docs.python.org/3/library/sqlite3.html#sqlite3.Connection.create_aggregate
+
+    
 |
 FUNCTION:lite_plus
 =======================================

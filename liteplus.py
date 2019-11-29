@@ -65,7 +65,6 @@ def sql_register(sql_name, numargs, numargs2=None, numargs3=None, numargs4=None,
             return f(*args)
 
         return wrapped_f
-
     return wrap
 
 
@@ -288,13 +287,43 @@ def oracle_nvl2(expr1, expr2, expr3):
 
 
 ## IMAP EMAIL FUNCTIONS
-def getImapMailboxHeaders(server, user, password, path, searchSpec=None):
-    """ WORK IN PROGRESS
-        imap_headers(server,user,password,path , index, [, searchspec])
+@sql_register("imap_count",3,4,5)
+def getImapMailboxCount(server, user, password, path="INBOX", searchSpec=None):
+    """
+    
+    imap_count(server,user,password,[path[,searchSpec])
+
+    Return the number of emails in the selected path. To use with imap_email
+    
+    Return -1 on error
+    """
+    import imaplib
+    retVal=-1
+    with imaplib.IMAP4_SSL(server) as M:
+        M.login(user,password)
+        M.select(path)
+        if searchSpec== None:
+            typ, data = M.search(None, 'ALL')
+        else:
+            typ, data = M.search(None, searchSpec)
+        if typ=="OK":
+            retVal=len(data[0].split())
+        else:            
+            retVal= -1
+        M.logout()
+    return retVal
+
+@sql_register("imap_email",4,5,6)
+def getImapMailboxEmail(server, user, password, index, path="INBOX",  searchSpec=None):
+    """ 
+        imap_headers(server, user, password, index, path="INBOX",  searchSpec=None)
         Load specified email header from an imap server. index starts from 0.
         
         Example
-        imap_headers( 'imap.gmail.com','notatallawhistleblowerIswear@gmail.com','secret','folder',0)
+            WITH RECURSIVE
+            cnt(x) AS (VALUES(1) UNION ALL SELECT x+1 FROM cnt WHERE x<imap_count("127.0.0.1","jj","pass","test"))
+            select x-1 as num, imap_email("127.0.0.1","jj","pass",x-1,"test") as message FROM cnt;
+
 
     See also
     https://gist.github.com/robulouski/7441883
@@ -302,21 +331,22 @@ def getImapMailboxHeaders(server, user, password, path, searchSpec=None):
     https://docs.python.org/3/library/sqlite3.html#sqlite3.Connection.create_aggregate
 
     """    
-    import imaplib, getpass, email, email.header
-
-    M = imaplib.IMAP4_SSL(server)
-
     try:
-        rv, data = M.login(user, password)
-    except imaplib.IMAP4.error as err:
-        raise err
-    rv, mailboxes = M.list()
-    if rv != "OK":
-        raise Exception("Cannot list mailboxes:" + rv)
-    rv, data = M.select(path)
-    # TODO CONTINUE
-    raise Exception("Still not implemented")
-
+        import imaplib, email, email.header
+        with imaplib.IMAP4_SSL(server) as M:
+            M.login(user,password)
+            M.select(path)
+            if searchSpec== None:
+                typ, data = M.search(None, 'ALL')
+            else:
+                typ, data = M.search(None, searchSpec)
+            id2fetch= (data[0].split())[index]
+            typ, data = M.fetch(id2fetch, '(RFC822)')      
+            M.logout()  
+            msg_return=data[0][1]            
+            return msg_return
+    except Exception as e:
+        raise SqliteFunctionException( e )
 
 
 
@@ -410,6 +440,14 @@ def lite_plus_function_list(i):
     func_name, args, f = GLOBAL_REGISTER_LIST[i]
     return str(func_name)
     
+
+# Maps default os.getenv
+# Oracle has not a similar function
+# Cmp https://stackoverflow.com/questions/20991187/how-can-read-environment-variable-with-sql-statement-in-oracle
+import os
+sql_register("get_env",1,2)(os.getenv)
+
+
 
 # GLOBAL
 registeredFunctions = 0
