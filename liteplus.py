@@ -272,6 +272,13 @@ def oracle_nvl(expr1, expr2):
 
 
 
+# CREATE TABLE sqlite_master (
+#   type TEXT,
+#   name TEXT,
+#   tbl_name TEXT,
+#   rootpage INTEGER,
+#   sql TEXT
+# );
 
 
 @sql_register("nvl2", 3)
@@ -461,7 +468,12 @@ MAX_BUFFER_SIZE_KB = 32
 
 
 def main(argv=sys.argv):
-
+    # If first parameter seems an option (like -h or --help)
+    # or if no input given, please print usage and exit
+    if len(argv)==1 or (len (argv)==2 and argv[1][0]=='-'):
+        print("Usage:")
+        print(argv[0]+" <dbfile>  [optional sql file to execute]")
+        sys.exit(1)
     databaseName = argv[1]
     con = sqlite3.connect(databaseName)
 
