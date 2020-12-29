@@ -3,7 +3,8 @@
 SQLite Oracle Function extensions written in Python3
 
 # Requirements
-Tested on Python 3.7.x
+Python 3.9.x for document db new features
+
 
 # FOR IMAP TESTING
 Consider using
