@@ -37,6 +37,7 @@ select assert_equals(2, count(*)) from dup_table;
 create table dump_me (a text);
 insert into dump_me  values ('dumped');
 
+-- BASIC ENV TEST
 -- select get_env("OS") as opsystem ;
 select assert_equals("ChandlerJob", get_env("does_not_exist","ChandlerJob")) as env_test ;
 

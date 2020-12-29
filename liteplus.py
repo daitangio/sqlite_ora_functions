@@ -51,6 +51,10 @@ GLOBAL_REGISTER_LIST = []
 
 
 def sql_register(sql_name, numargs, numargs2=None, numargs3=None, numargs4=None, numargs5=None):
+    """
+    Core function to register a sql function inside liteplus
+    It also support a way to register var-arg functions, specifying up to 5 variants
+    """
     def wrap(f):
         GLOBAL_REGISTER_LIST.append((sql_name, numargs, f))
         if numargs2!=None:
@@ -342,15 +346,21 @@ def getImapMailboxEmail(server, user, password, index, path="INBOX",  searchSpec
         import imaplib, email, email.header
         with imaplib.IMAP4_SSL(server) as M:
             M.login(user,password)
-            M.select(path)
+            typ, data=M.select(path)
+            if(data[0]==b'0'):
+                print ("*SELECT*FAILED",path,typ,data)
+                return "ERR NO MAILBOX:"+path            
             if searchSpec== None:
                 typ, data = M.search(None, 'ALL')
             else:
                 typ, data = M.search(None, searchSpec)
-            id2fetch= (data[0].split())[index]
-            typ, data = M.fetch(id2fetch, '(RFC822)')      
+            if len(data[0].split()) >0:
+                id2fetch= (data[0].split())[index]
+                typ, data = M.fetch(id2fetch, '(RFC822)')                      
+                msg_return=data[0][1]
+            else:
+                msg_return=None
             M.logout()  
-            msg_return=data[0][1]            
             return msg_return
     except Exception as e:
         raise SqliteFunctionException( e )
