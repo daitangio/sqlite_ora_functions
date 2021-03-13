@@ -7,13 +7,8 @@ WITH RECURSIVE
 select x-1 as num, imap_email("127.0.0.1","jj","pass",x-1,"test") as message FROM cnt;
 
 
-
-
 -- select x from dual where x between 0 and imap_count("127.0.0.1","jj","pass")-1;
 
-/*
-select imap_email("127.0.0.1","jj","pass",idx, "INBOX")  as message
-where idx between 0 and (imap_count("127.0.0.1","jj","pass")-1);
-*/
-
+/*select imap_email("127.0.0.1","jj","pass",idx, "INBOX")  as message where idx between 0 and (imap_count("127.0.0.1","jj","pass")-1);*/
+;
 .exit

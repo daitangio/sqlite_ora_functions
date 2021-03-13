@@ -19,6 +19,20 @@ FUNCTION:cos
 =======================================
 Return the cosine of x (measured in radians).
 |
+FUNCTION:eval
+=======================================
+
+     Direct python eval a python expression.
+     Usage examples:
+
+     select eval(4+3) ;
+
+     You can call also as a dot command like
+     .eval 4+3
+     When using a dot command, you will have access to set of object to make queries in an imperative manner.
+
+    
+|
 FUNCTION:floor
 =======================================
 Return the floor of x as an Integral.
