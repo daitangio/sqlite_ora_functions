@@ -1,2 +1,4 @@
 build
 test.db
+.vscode
+env/*

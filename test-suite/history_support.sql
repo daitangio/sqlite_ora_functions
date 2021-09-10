@@ -83,4 +83,5 @@ select * from  vcustomer;
 .print Real table data:
 select * from customer order by d_start desc;
 
+.dump
 .exit

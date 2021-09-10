@@ -15,6 +15,8 @@ See https://hub.docker.com/r/dovecot/dovecot
 
  
 # To watchout
+https://rogerbinns.github.io/apsw/pysqlite.html
+
 Consider also 
 https://flit.readthedocs.io/en/latest/index.html
 for packaging the project

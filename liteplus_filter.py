@@ -525,23 +525,34 @@ def execute_files(flist,con, lite_plus_ver):
         with open(fname,"r") as f:
             repl_cycle(con,lite_plus_ver,f)
 
-def repl_cycle(con, lite_plus_ver, input_file=sys.stdin):
+def repl_cycle(con, lite_plus_ver, input_file=sys.stdin, context={}):
     # REPL cycle
     if input_file ==sys.stdin:
         sys.stdout.write(lite_plus_ver)
     buffer = ""
     commandExecuted = 0
     con.row_factory = sqlite3.Row
+    all_data=input_file.read()
+    #sys.stdout.write(all_data)
+    from jinja2 import Template
+    template = Template(all_data)
+    output=template.render({
+         "LITEPLUS_VERSION":lite_plus_ver
+    })
+    sys.stdout.write(output)
+
+
+def bad():    
     while True:
-            l = input_file.readline()
-            buffer += l
-            if len(buffer) > (MAX_BUFFER_SIZE_KB * 1024):
-                raise Exception(
-                    (
-                        "BUFFER OVERFLOW ERROR Line too long. Limit: %i Kb Offending line:\nSTART:%s\nEND:%s\n"
-                        % (MAX_BUFFER_SIZE_KB, buffer[0:70], buffer[-70:])
-                    )
+        l = input_file.readline()
+        buffer += l
+        if len(buffer) > (MAX_BUFFER_SIZE_KB * 1024):
+            raise Exception(
+                (
+                    "BUFFER OVERFLOW ERROR Line too long. Limit: %i Kb Offending line:\nSTART:%s\nEND:%s\n"
+                    % (MAX_BUFFER_SIZE_KB, buffer[0:70], buffer[-70:])
                 )
+            )
         if ";" in l:
             # See https://github.com/jonathanslenders/python-prompt-toolkit/blob/master/examples/tutorial/sqlite-cli.py
             try:

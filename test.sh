@@ -2,10 +2,10 @@
 # -*- mode: company ; mode: shell-script  -*-
 set -e -u 
 set -x
-docker restart dovecot_imap ||  docker run --rm -d --name dovecot_imap -p 143:143 -p 993:993 dovecot/dovecot:2.3.8 
+#docker restart dovecot_imap ||  docker run --rm -d --name dovecot_imap -p 143:143 -p 993:993 dovecot/dovecot:2.3.8 
 set +x
 
-docker logs dovecot_imap
+#docker logs dovecot_imap
 
 echo "Basic regexp test..."
 
@@ -26,7 +26,8 @@ for f in test-suite/*; do
             echo "[$f] EXCEPTION PASSED"
         else
             echo "[$f]" FAILED
-            cat $logfile
+            tail $logfile
+            exit 1000
         fi
         #cat $logfile 
         #exit 1000
